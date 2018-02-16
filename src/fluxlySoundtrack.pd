@@ -1,0 +1,4 @@
+#N canvas 0 23 450 300 10;
+#X obj 170 48 osc~ 440;
+#X obj 164 109 dac~;
+#X obj 245 47 osc~ 650;

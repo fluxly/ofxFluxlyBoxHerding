@@ -64,19 +64,24 @@ public:
     int eyeState = 0;
     int eyePeriod = 100;
     int type;
+    int origType;
     int nJoints = 0;
     int connections[4];
+    ofTrueTypeFont vag;
+    
+    b2BodyDef * def;
     
     ofImage myEyesOpen;
     ofImage myEyesClosed;
+    ofImage grayOverlay;
     
     void init() {
         myEyesOpen.load("eyesOpen.png");
         myEyesClosed.load("eyesClosed.png");
-        
-        for (int i=0; i<4; i++) {
-            connections[i] = -1;
-        }
+       // grayOverlay.load("grayOverlay.png");
+        vag.load("vag.ttf", 9);
+      
+        origType = type;
         
         switch (type) {
             case 0:
@@ -133,7 +138,8 @@ public:
     }
     
     void teleport() {
-        ofLog(OF_LOG_VERBOSE, "teleport");
+        ofLog(OF_LOG_VERBOSE, "teleport %d", id);
+        
         setPosition(ofRandom(20, 250), ofRandom(20, 350));
     }
     
@@ -146,13 +152,22 @@ public:
         ofTranslate(ofxBox2dBaseShape::getPosition());
         ofRotate(getRotation(), 0, 0, 1);
         mesh.draw();
+       /* if (nJoints == 3) {
+            ofSetHexColor(0xffffff);
+            grayOverlay.draw(0, 0, w, w);
+        }*/
+        
         ofSetHexColor(0xFFFFFF);
-        if (eyeState == 0) {
-            //ofLog(OF_LOG_VERBOSE, "closed");
-            myEyesClosed.draw(0, 0, w, w);
-        } else {
-            myEyesOpen.draw(0, 0, w, w);
+        if (nJoints > 2) {
+            if (eyeState == 0) {
+                //ofLog(OF_LOG_VERBOSE, "closed");
+                myEyesClosed.draw(0, 0, w, w);
+            } else {
+                myEyesOpen.draw(0, 0, w, w);
+            }
         }
+       // ofSetHexColor(0x000000);
+       // vag.drawString(std::to_string(id), -5,-5);
         ofPopMatrix();
         
     }
@@ -186,6 +201,9 @@ public:
     
     FluxlyCloud() {
         playerImage.load("cloud.png");
+    }
+    void pushUp() {
+    
     }
     void draw() {
         if(body == NULL) {

@@ -4,22 +4,25 @@
 #include "b2dJson.h"
 #include "ofxBox2d.h"
 #include "FluxlyClasses.h"
+#include "ofxPd.h"
 
 #define nControls (10)
-#define nWorlds (1)
 #define lightningPeriod (18)
 #define lightningWait (8)
 
 #define GRAVITY_UP_CONTROL (0)
-#define BOXEN_CONTROL (1)
-#define WIND_FROM_EAST_CONTROL (2)
-#define WIND_FROM_WEST_CONTROL (3)
-#define MORE_GRAVITY_CONTROL (4)
+#define WIND_FROM_EAST_CONTROL (1)
+#define WIND_FROM_WEST_CONTROL (2)
+#define SHOW_JOINTS_CONTROL (3)
+#define PAUSE_MORE_CONTROL (4)
 #define LIGHTNING_CONTROL (5)
 #define CLOUD_CONTROL (6)
-#define EARTHQUAKE_CONTROL (7)
-#define TELEPORT_CONTROL (8)
+#define TELEPORT_CONTROL (7)
+#define COLORWHEEL_CONTROL (8)
 #define BUBBLE_CONTROL (9)
+
+// a namespace for the Pd types
+using namespace pd;
 
 class BoxData {
 public:
@@ -32,7 +35,14 @@ public:
     int id2;
 };
 
-class ofApp : public ofxiOSApp {
+class FluxlyJointConnection {
+public:
+    int id1;
+    int id2;
+    ofxBox2dJoint *joint;
+};
+
+class ofApp : public ofxiOSApp, public PdReceiver, public PdMidiReceiver {
 	
   public:
         void setup();
@@ -58,15 +68,28 @@ class ofApp : public ofxiOSApp {
         void addLightning();
         void removeLightning();
         bool notConnectedYet(int n1, int n2);
-    bool complementaryColors(int n1, int n2);
+        bool complementaryColors(int n1, int n2);
 
         b2dJson json;
         string errorMsg;
         int controlType[nControls] = {
-            GRAVITY_UP_CONTROL, BOXEN_CONTROL, WIND_FROM_EAST_CONTROL, WIND_FROM_WEST_CONTROL, MORE_GRAVITY_CONTROL,
-            LIGHTNING_CONTROL, CLOUD_CONTROL, EARTHQUAKE_CONTROL,TELEPORT_CONTROL, BUBBLE_CONTROL
+            GRAVITY_UP_CONTROL, WIND_FROM_EAST_CONTROL, WIND_FROM_WEST_CONTROL, SHOW_JOINTS_CONTROL, PAUSE_MORE_CONTROL,
+            LIGHTNING_CONTROL, CLOUD_CONTROL, TELEPORT_CONTROL, COLORWHEEL_CONTROL, BUBBLE_CONTROL
          };
     
+    ofxPd pd;
+    vector<Patch> instances;
+    
+    // audio callbacks
+    void audioReceived(float * input, int bufferSize, int nChannels);
+    void audioRequested(float * output, int bufferSize, int nChannels);
+    
+    // sets the preferred sample rate, returns the *actual* samplerate
+    // which may be different ie. iPhone 6S only wants 48k
+    float setAVSessionSampleRate(float preferredSampleRate);
+    
+    int midiChan;
+    int tempo = 1;
     int controlX[nControls] = { 0, 1, 2, 3, 4, 0, 1, 2, 3, 4 };
     int controlY[nControls] = { 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
     int controlW = 60;
@@ -101,35 +124,35 @@ class ofApp : public ofxiOSApp {
     int globalTick = 0;
     int tempId1;
     int tempId2;
-    int maxJoints = 3;
+    int maxJoints = 4;
     
     bool lightningAdded = false;
     bool earthquakeApplied = false;
     bool teleported = false;
+    bool jointsShown = false;
+    bool paused = false;
+    bool showColorWheel = false;
+    int teleportingId = -1;
     
     ofImage controlImage[nControls];
-    ofImage background[nWorlds];
-    ofImage foreground[nWorlds];
+    ofImage background;
+    ofImage foreground;
+    ofImage colorwheel;
 
     string controlImageFilename[nControls] = {
-        "lessGravity.png", "moreBoxen.png", "windFromEast.png", "windFromWest.png", "moreGravity.png",
-        "lightningControl.png", "cloudControl.png", "shake.png",  "teleport.png", "bubbles.png"
+        "lessGravity.png", "windFromEast.png", "windFromWest.png", "showJoints.png", "pauseMore.png",
+        "lightningControl.png", "cloudControl.png", "teleport.png",  "colorWheelControl.png", "bubbles.png"
     };
     
-    string playerImage[nWorlds] = { "fluxum.png" };
+    ofxBox2d box2d;
     
-    ofxBox2d box2d[nWorlds];
-    
-   // vector <shared_ptr<FluxlyPlayer> > player;
     vector <shared_ptr<FluxlyBox> > boxen;
     vector <shared_ptr<FluxlyCloud> > clouds;
     vector <shared_ptr<FluxlyLightning> > lightning;
-    //vector <shared_ptr<FluxlyCircle> > circles;
-    //vector <shared_ptr<ofxBox2dCircle> > bubbles;
-    vector <shared_ptr<ofxBox2dJoint> > joints;
+    vector <shared_ptr<FluxlyJointConnection> > joints;
     vector <shared_ptr<FluxlyConnection> > connections;
     
-    ofRectangle bounds[nWorlds];
+    ofRectangle bounds;
 };
 
 

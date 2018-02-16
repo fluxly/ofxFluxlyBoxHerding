@@ -170,6 +170,10 @@
 		9D256052202F5C6D003989FB /* foreground2.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D25604D202F5C6D003989FB /* foreground2.png */; };
 		9D256053202F5C6D003989FB /* foreground3.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D25604E202F5C6D003989FB /* foreground3.png */; };
 		9D256054202F5C6D003989FB /* foreground1.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D25604F202F5C6D003989FB /* foreground1.png */; };
+		9D256057202F8CDF003989FB /* grayOverlay.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D256056202F8CDF003989FB /* grayOverlay.png */; };
+		9D2560592034F4FB003989FB /* colorWheel.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D2560582034F4FA003989FB /* colorWheel.png */; };
+		9D25605B2034F63D003989FB /* colorWheelControl.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D25605A2034F63D003989FB /* colorWheelControl.png */; };
+		9D25605F203654EA003989FB /* fluxlySoundtrack.pd in Resources */ = {isa = PBXBuildFile; fileRef = 9D25605E203654EA003989FB /* fluxlySoundtrack.pd */; };
 		9D32D6081FA1326200C87082 /* b2dJson.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9D32D5FE1FA1326200C87082 /* b2dJson.mm */; };
 		9D32D6091FA1326200C87082 /* b2dJsonImage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9D32D6001FA1326200C87082 /* b2dJsonImage.mm */; };
 		9D32D60A1FA1326200C87082 /* b2dJsonImage_OpenGL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9D32D6021FA1326200C87082 /* b2dJsonImage_OpenGL.mm */; };
@@ -480,6 +484,10 @@
 		9D25604D202F5C6D003989FB /* foreground2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = foreground2.png; sourceTree = "<group>"; };
 		9D25604E202F5C6D003989FB /* foreground3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = foreground3.png; sourceTree = "<group>"; };
 		9D25604F202F5C6D003989FB /* foreground1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = foreground1.png; sourceTree = "<group>"; };
+		9D256056202F8CDF003989FB /* grayOverlay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = grayOverlay.png; sourceTree = "<group>"; };
+		9D2560582034F4FA003989FB /* colorWheel.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = colorWheel.png; sourceTree = "<group>"; };
+		9D25605A2034F63D003989FB /* colorWheelControl.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = colorWheelControl.png; sourceTree = "<group>"; };
+		9D25605E203654EA003989FB /* fluxlySoundtrack.pd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = fluxlySoundtrack.pd; sourceTree = "<group>"; };
 		9D32D5FD1FA1326200C87082 /* b2dJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b2dJson.h; sourceTree = "<group>"; };
 		9D32D5FE1FA1326200C87082 /* b2dJson.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = b2dJson.mm; sourceTree = "<group>"; };
 		9D32D5FF1FA1326200C87082 /* b2dJsonImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b2dJsonImage.h; sourceTree = "<group>"; };
@@ -963,6 +971,9 @@
 		9D255FC82026B907003989FB /* data */ = {
 			isa = PBXGroup;
 			children = (
+				9D25605A2034F63D003989FB /* colorWheelControl.png */,
+				9D2560582034F4FA003989FB /* colorWheel.png */,
+				9D256056202F8CDF003989FB /* grayOverlay.png */,
 				9D25604F202F5C6D003989FB /* foreground1.png */,
 				9D25604D202F5C6D003989FB /* foreground2.png */,
 				9D25604E202F5C6D003989FB /* foreground3.png */,
@@ -1310,6 +1321,7 @@
 		E4D8936A11527B74007E1F53 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9D25605E203654EA003989FB /* fluxlySoundtrack.pd */,
 				9D2560362026B976003989FB /* FluxlyClasses.h */,
 				9D32D60C1FA1335A00C87082 /* fluxly1.json */,
 				9D32D5FC1FA1326200C87082 /* b2dJson */,
@@ -1462,6 +1474,7 @@
 				9D2560202026B94B003989FB /* fluxum.png in Resources */,
 				678E131017951549005B6D19 /* Default-568h@2x~iphone.png in Resources */,
 				9D256053202F5C6D003989FB /* foreground3.png in Resources */,
+				9D256057202F8CDF003989FB /* grayOverlay.png in Resources */,
 				9D2560052026B94B003989FB /* lessGravity.png in Resources */,
 				9D25601B2026B94B003989FB /* gravityup.mp3 in Resources */,
 				9D256042202C44E9003989FB /* background2.png in Resources */,
@@ -1474,11 +1487,14 @@
 				9D256038202C0802003989FB /* eyesClosed.png in Resources */,
 				9D25603F202C44E9003989FB /* background5.png in Resources */,
 				9D25602E2026B94B003989FB /* fluxum1.svg in Resources */,
+				9D2560592034F4FB003989FB /* colorWheel.png in Resources */,
 				9D256052202F5C6D003989FB /* foreground2.png in Resources */,
 				9D25602F2026B94B003989FB /* cloud.png in Resources */,
 				9D2560212026B94B003989FB /* swirl.png in Resources */,
 				9D256046202CCA8C003989FB /* lightningControl.png in Resources */,
+				9D25605B2034F63D003989FB /* colorWheelControl.png in Resources */,
 				9D2560062026B94B003989FB /* startup2.mp3 in Resources */,
+				9D25605F203654EA003989FB /* fluxlySoundtrack.pd in Resources */,
 				9D256045202CCA8C003989FB /* cloudControl.png in Resources */,
 				9D25602B2026B94B003989FB /* teleport.png in Resources */,
 				9D25602C2026B94B003989FB /* background.png in Resources */,

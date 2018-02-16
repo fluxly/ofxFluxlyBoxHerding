@@ -1,13 +1,66 @@
 #include "ofApp.h"
+#import <AVFoundation/AVFoundation.h>
 
 
 //--------------------------------------------------------------
 void ofApp::setup(){
     
     ofSetLogLevel(OF_LOG_VERBOSE);
-    ofSeedRandom();
+    ofSetLogLevel("Pd", OF_LOG_VERBOSE); // see verbose info inside
+    // try to set the preferred iOS sample rate, but get the actual sample rate
+    // being used by the AVSession since newer devices like the iPhone 6S only
+    // want specific values (ie 48000 instead of 44100)
+    float sampleRate = setAVSessionSampleRate(44100);
     
-    if (nWorlds == 1)  worldY[0] += 190;
+    // the number if libpd ticks per buffer,
+    // used to compute the audio buffer len: tpb * blocksize (always 64)
+    int ticksPerBuffer = 8; // 8 * 64 = buffer len of 512
+    
+    // setup OF sound stream using the current *actual* samplerate
+    ofSoundStreamSetup(2, 0, this, sampleRate, ofxPd::blockSize()*ticksPerBuffer, 3);
+    
+    // setup Pd
+    //
+    // set 4th arg to true for queued message passing using an internal ringbuffer,
+    // this is useful if you need to control where and when the message callbacks
+    // happen (ie. within a GUI thread)
+    //
+    // note: you won't see any message prints until update() is called since
+    // the queued messages are processed there, this is normal
+    //
+    if(!pd.init(2, 1, sampleRate, ticksPerBuffer-1, false)) {
+        OF_EXIT_APP(1);
+    }
+    
+    // Setup externals
+   
+    midiChan = 1; // midi channels are 1-16
+    
+    // subscribe to receive source names
+    pd.subscribe("toOF");
+    pd.subscribe("env");
+    
+    // add message receiver, required if you want to receieve messages
+    pd.addReceiver(*this);   // automatically receives from all subscribed sources
+    pd.ignoreSource(*this, "env");      // don't receive from "env"
+    //pd.ignoreSource(*this);           // ignore all sources
+    //pd.receiveSource(*this, "toOF");  // receive only from "toOF"
+    
+    // add midi receiver, required if you want to recieve midi messages
+    pd.addMidiReceiver(*this);  // automatically receives from all channels
+    //pd.ignoreMidiChannel(*this, 1);     // ignore midi channel 1
+    //pd.ignoreMidiChannel(*this);        // ignore all channels
+    //pd.receiveMidiChannel(*this, 1);    // receive only from channel 1
+    
+    // add the data/pd folder to the search path
+    //pd.addToSearchPath("pd/abs");
+    
+    // audio processing on
+    pd.start();
+    pd.openPatch("fluxlySoundtrack.pd");
+    
+    ofSeedRandom();
+
     for (int i=0;i<nControls; i++) {
         controlX[i] = controlX[i] * 64;
         controlY[i] = screenH - (controlY[i]+1)*64;
@@ -17,23 +70,24 @@ void ofApp::setup(){
     ofSetFrameRate(60);
     ofEnableAntiAliasing();
     
-    for (int i=0; i<nWorlds; i++) {
-        //background[i].load("background" + std::to_string((int)ofRandom(1, 5)) + ".png");
-        background[i].load("background2.png");
-        foreground[i].load("foreground2.png");
-        // the world bounds
-        bounds[i].set(0, 0, worldW, worldH);
-        box2d[i].init();
-        box2d[i].setFPS(60);
-        box2d[i].setGravity(gravityX, gravityY);
-        box2d[i].createBounds(bounds[0]);
-        box2d[i].enableEvents();
-        ofAddListener(box2d[i].contactStartEvents, this, &ofApp::contactStart);
-        ofAddListener(box2d[i].contactEndEvents, this, &ofApp::contactEnd);
-    }
+    //background.load("background" + std::to_string((int)ofRandom(1, 5)) + ".png");
+    background.load("background2.png");
+    foreground.load("foreground2.png");
+    colorwheel.load("colorWheel.png");
+    
+    // the world bounds
+    bounds.set(0, 0, worldW, worldH);
+    box2d.init();
+    box2d.setFPS(60);
+    box2d.setGravity(gravityX, gravityY);
+    box2d.createBounds(bounds);
+    box2d.enableEvents();
+    ofAddListener(box2d.contactStartEvents, this, &ofApp::contactStart);
+    ofAddListener(box2d.contactEndEvents, this, &ofApp::contactEnd);
     
     // add some boxes to world
-    for (int i=0; i < 50; i++) {
+    for (int i=0; i < ofRandom(10, 50); i++) {
+    // for (int i=0; i < 8; i++) {
         boxen.push_back(shared_ptr<FluxlyBox>(new FluxlyBox));
         FluxlyBox * b = boxen.back().get();
         if (i<7) {
@@ -44,7 +98,7 @@ void ofApp::setup(){
         float w = ofRandom(5,10)*2;  // should be multiple of 2 or power of 2?
         //float w = 16.0;
         b->setPhysics(1, 0.5, 1);
-        b->setup(box2d[0].getWorld(), ofRandom(10, worldW-10), ofRandom(10, worldH-10), w, w);
+        b->setup(box2d.getWorld(), ofRandom(10, worldW-10), ofRandom(10, worldH-10), w, w);
         b->id = i;
         b->w = w;
         BoxData * bd = new BoxData();
@@ -54,14 +108,7 @@ void ofApp::setup(){
         b->init();
     }
     
-   /* for (int i=1; i<boxen.size(); i++) {
-        if (ofRandom(0,100)<60) {
-        shared_ptr<ofxBox2dJoint> joint = shared_ptr<ofxBox2dJoint>(new ofxBox2dJoint);
-        joint.get()->setup(box2d[0].getWorld(), boxen[i-1].get()->body, boxen[i].get()->body);
-        joint.get()->setLength(1);
-        joints.push_back(joint);
-        }
-    }*/
+   // box2d[0].registerGrabbing();
     
     vagRounded.load("vag.ttf", 18);
 }
@@ -75,145 +122,190 @@ static bool shouldRemoveConnection(shared_ptr<FluxlyConnection>shape) {
 }
 
 //--------------------------------------------------------------
-void ofApp::update(){
-    // Check for tick events
-    globalTick++;
-    for (int i=0; i<boxen.size(); i++) {
-        if ((globalTick % boxen[i]->eyePeriod) == 0) {
-            if (boxen[i]->eyeState == 1) {
-                boxen[i]->eyeState = 0;
-            } else {
-                boxen[i]->eyeState = 1;
-            }
-        }
-    }
-    if (((globalTick % lightningPeriod) == 0) && (lightning.size() > 0)) {
-        removeLightning();
-    }
-
-    if ((globalTick % lightningWait) == 0) {
-        lightningAdded = false;
+void ofApp::update() {
+    // since this is a test and we don't know if init() was called with
+    // queued = true or not, we check it here
+    if(pd.isQueued()) {
+        // process any received messages, if you're using the queue and *do not*
+        // call these, you won't receieve any messages or midi!
+        pd.receiveMessages();
+        pd.receiveMidi();
     }
     
-    if (controlState[GRAVITY_UP_CONTROL] == 2 ) {
-        //Wakeup?
-        if (controlState[MORE_GRAVITY_CONTROL] == 2) {
-            if (gravityY < gravityYMax) gravityY++;
+    if (controlState[COLORWHEEL_CONTROL] == 2 ) {
+        globalTick++;
+        paused = true;
+        showColorWheel = true;
+    }
+    
+    if ((controlState[SHOW_JOINTS_CONTROL ] == 2) && !jointsShown) {
+        for (int i=0; i<boxen.size(); i++) {
+            ofLog(OF_LOG_VERBOSE, "Box %d joints: %d",i, boxen[i]->nJoints);
+            jointsShown = true;
         }
-        if (gravityY > gravityYMin) gravityY--;
-    } else {
-        if (controlState[MORE_GRAVITY_CONTROL] == 2) {
-            if (gravityY < gravityYMax) gravityY++;
+    }
+    
+    if (!paused) {
+        if (!teleported) box2d.update();
+        
+        // Check for tick events
+        globalTick++;
+        for (int i=0; i<boxen.size(); i++) {
+            if ((globalTick % boxen[i]->eyePeriod) == 0) {
+                if (boxen[i]->eyeState == 1) {
+                    boxen[i]->eyeState = 0;
+                } else {
+                    boxen[i]->eyeState = 1;
+                }
+            }
+        }
+        if (((globalTick % lightningPeriod) == 0) && (lightning.size() > 0)) {
+            removeLightning();
+        }
+        
+        if ((globalTick % lightningWait) == 0) {
+            lightningAdded = false;
+        }
+        
+        if (((globalTick % 60) == 0) && (teleportingId > 0)) {
+            teleportingId = -1;
+        }
+        
+        if (controlState[GRAVITY_UP_CONTROL] == 2 ) {
+            if (gravityY > gravityYMin) gravityY--;
         } else {
             gravityY = origGravityY;
         }
-    }
-    if (controlState[WIND_FROM_EAST_CONTROL] == 2) {
-        //Wakeup?
-        if (controlState[WIND_FROM_WEST_CONTROL] == 2) {
-            if (gravityX < gravityXMax) gravityX++;
-        }
-        if (gravityX > gravityXMin) gravityX--;
-    } else {
-        if (controlState[WIND_FROM_WEST_CONTROL] == 2) {
-            if (gravityX < gravityXMax) gravityX++;
+        
+        if (controlState[WIND_FROM_EAST_CONTROL] == 2) {
+            //Wakeup?
+            if (controlState[WIND_FROM_WEST_CONTROL] == 2) {
+                if (gravityX < gravityXMax) gravityX++;
+            }
+            if (gravityX > gravityXMin) gravityX--;
         } else {
-            gravityX = origGravityX;
-        }
-    }
-    for (int i=0; i<clouds.size(); i++) {
-        clouds[i].get()->setRotation(0);
-        clouds[i].get()->setRotationFriction(.99);      // NOT WORKING?
-        clouds[i].get()->setDamping(.99, .99);         // NOT WORKING
-    }
-    
-    if (controlState[CLOUD_CONTROL] == 2 ) {
-        addCloud();
-    }
-    if ((controlState[LIGHTNING_CONTROL] == 2 ) && !lightningAdded) {
-        addLightning();
-    }
-    
-    if ((controlState[TELEPORT_CONTROL] == 2 ) && !teleported) {
-        int r = ofRandom(0, boxen.size());
-        for (int i=0; i<joints.size(); i++) {
-            if ((connections[i]->id1 == r) || (connections[i]->id2 == r)) {
-                
-                // NEED TO DESTROY THE JOINT
-                
-                //joints.erase( joints.begin() + connections[i]->jointId] );
-                //connections.erase( connections.begin() + i );
-                boxen[r]->nJoints--;
-                ofLog(OF_LOG_VERBOSE, "Removed joint count: %d",boxen[r]->nJoints);
+            if (controlState[WIND_FROM_WEST_CONTROL] == 2) {
+                if (gravityX < gravityXMax) gravityX++;
+            } else {
+                gravityX = origGravityX;
             }
         }
-        boxen[r]->teleport();
-        teleported = true;
-    }
-    
-    if ((controlState[EARTHQUAKE_CONTROL] == 2) && !earthquakeApplied) {
-        for (int i=0; i<boxen.size(); i++) {
-            ofLog(OF_LOG_VERBOSE, "shake %d", i);
-            boxen[i].get()->shake();
-            earthquakeApplied = true;
+        for (int i=0; i<clouds.size(); i++) {
+            clouds[i].get()->setRotation(0);
+            clouds[i].get()->setRotationFriction(1);
+            clouds[i].get()->setDamping(0, 0);
+            clouds[i].get()->pushUp();
         }
-    }
         
-    box2d[0].setGravity(gravityX, gravityY);
-    //box2d[1].setGravity(gravityX, gravityY);
-    //eventString = ofToString(gravityY);
-    
-    if (connections.size()>0) {
-    for (int i=0; i<connections.size(); i++) {
-        //Go through list of connections and add joints
-        //ofLog(OF_LOG_VERBOSE, "id1: %d  id2: %d", connections[i]->id1, connections[i]->id2);
-        tempId1 = connections[i]->id1;
-        tempId2 = connections[i]->id2;
-        
-        if ((boxen[tempId1]->nJoints < maxJoints) && (boxen[tempId2]->nJoints < maxJoints)
-            && notConnectedYet(tempId1, tempId2) && complementaryColors(tempId1, tempId2)){
-          
-            shared_ptr<ofxBox2dJoint> joint = shared_ptr<ofxBox2dJoint>(new ofxBox2dJoint);
-            joint.get()->setup(box2d[0].getWorld(), boxen[tempId1].get()->body, boxen[tempId2].get()->body);
-            joint.get()->setLength(1);
-            joints.push_back(joint);
-            boxen[tempId1]->connections[boxen[tempId1]->nJoints] = tempId2;
-            boxen[tempId2]->connections[boxen[tempId1]->nJoints] = tempId1;
-            boxen[tempId1]->nJoints++;
-            boxen[tempId2]->nJoints++;
+        if (controlState[PAUSE_MORE_CONTROL] == 2 ) {
+            paused = true;
         }
-     }
-      // Remove everything from connections vector
-      //ofLog(OF_LOG_VERBOSE, "Connections: %d", connections.size());
-      ofRemove(connections, shouldRemoveConnection);
-      //ofLog(OF_LOG_VERBOSE, "Connections after remove: %d", connections.size());
+        
+        if (controlState[CLOUD_CONTROL] == 2 ) {
+            addCloud();
+        }
+        if ((controlState[LIGHTNING_CONTROL] == 2 ) && !lightningAdded) {
+            addLightning();
+        }
+        
+        /*if ((controlState[EARTHQUAKE_CONTROL] == 2) && !earthquakeApplied) {
+         for (int i=0; i<boxen.size(); i++) {
+         ofLog(OF_LOG_VERBOSE, "shake %d", i);
+         boxen[i].get()->shake();
+         earthquakeApplied = true;
+         }
+         }*/
+        
+        box2d.setGravity(gravityX, gravityY);
+        
+        if (connections.size()>0) {
+            for (int i=0; i<connections.size(); i++) {
+                //Go through list of connections and add joints
+                ofLog(OF_LOG_VERBOSE, "List size: %d  id1: %d  id2: %d", connections.size(), connections[i]->id1, connections[i]->id2);
+                
+                tempId1 = connections[i]->id1;
+                tempId2 = connections[i]->id2;
+                
+                if ((boxen[tempId1]->nJoints < maxJoints) && (boxen[tempId2]->nJoints < maxJoints)
+                    && notConnectedYet(tempId1, tempId2) && complementaryColors(tempId1, tempId2)){
+                    ofLog(OF_LOG_VERBOSE, "CONNECT: %d -> %d", tempId1, tempId2);
+                    /*shared_ptr<ofxBox2dJoint> joint = shared_ptr<ofxBox2dJoint>(new ofxBox2dJoint);
+                     joint.get()->setup(box2d[0].getWorld(), boxen[tempId1].get()->body, boxen[tempId2].get()->body);
+                     joint.get()->setLength(1);
+                     joints.push_back(joint);*/
+                    
+                    shared_ptr<FluxlyJointConnection> jc = shared_ptr<FluxlyJointConnection>(new FluxlyJointConnection);
+                    ofxBox2dJoint *j = new ofxBox2dJoint;
+                    j->setup(box2d.getWorld(), boxen[tempId1].get()->body, boxen[tempId2].get()->body);
+                    j->setLength(1);
+                    jc.get()->id1 = tempId1;
+                    jc.get()->id2 = tempId2;
+                    jc.get()->joint = j;
+                    joints.push_back(jc);
+                    
+                    //boxen[tempId1]->connections[boxen[tempId1]->nJoints] = tempId2;
+                    //boxen[tempId2]->connections[boxen[tempId2]->nJoints] = tempId1;
+                    boxen[tempId1]->nJoints++;
+                    boxen[tempId2]->nJoints++;
+                    // if (boxen[tempId1]->nJoints == maxJoints) { boxen[tempId1]->color = ofColor::fromHex(0xcccccc); }
+                    // if (boxen[tempId2]->nJoints == maxJoints) { boxen[tempId2]->color = ofColor::fromHex(0xcccccc); }
+                }
+            }
+        }
+        // Remove everything from connections vector
+        //ofLog(OF_LOG_VERBOSE, "Connections: %d", connections.size());
+        ofRemove(connections, shouldRemoveConnection);
+        //ofLog(OF_LOG_VERBOSE, "Connections after remove: %d", connections.size());
+        
+        
+        if ((controlState[TELEPORT_CONTROL] == 2 ) && !teleported) {
+            int r = ofRandom(0, boxen.size());
+            //ofLog(OF_LOG_VERBOSE, "Number of joints: %d", joints.size());
+            for (int i=0; i<joints.size(); i++) {
+                ofSetColor( ofColor::fromHex(0xff0000) );
+                int myId1 = joints[i]->id1;
+                int myId2 = joints[i]->id2;
+                if ((myId1 == r) ||
+                    (myId2 == r)) {
+                    boxen[myId1]->nJoints--;
+                    boxen[myId2]->nJoints--;
+                    ofLog(OF_LOG_VERBOSE, "r: %d id1: %d id2: %d", r, joints[i]->id1, joints[i]->id2);
+                    ofLog(OF_LOG_VERBOSE, "Removed joint count: %d",boxen[r]->nJoints);
+                    joints[i]->joint->destroy();    // this calls box2d.getWorld()->DestroyJoint(joints[i]->joint->joint);
+                    joints.erase( joints.begin() + i );
+                }
+            }
+            // box2d.getWorld()->DestroyBody(boxen[r].get()->body);
+            // boxen[r]->setup(box2d.getWorld(), ofRandom(20, worldW-20), ofRandom(10, worldH-100), boxen[r]->w, boxen[r]->w);
+             boxen[r]->teleport();
+            teleportingId = r;
+            //box2d.getWorld()->CreateBody(boxen[r].get()->def);
+            teleported = true;
+        }
+       
     }
-    
-    box2d[0].update();
-    //box2d[1].update();
 }
 
 //--------------------------------------------------------------
-void ofApp::draw(){
+void ofApp::draw() {
     ofBackground(0, 0, 0);
     ofSetHexColor(0xFFFFFF);
     ofSetRectMode(OF_RECTMODE_CORNER);
-    background[0].draw(0, 0, worldW, worldH);
-    //foreground[0].draw(ofRandom(worldW), ofRandom(worldH), ofRandom(worldW/2), ofRandom(worldH/2));
-        ofSetHexColor(0xFFFFFF);
+    background.draw(0, 0, worldW, worldH);
+    ofSetHexColor(0xFFFFFF);
     
-        for (int i=0;i < nControls; i++) {
-            if (controlState[i] > 0) {
-                ofPushMatrix();
-                if (controlState[i] == 1) {
-                    ofSetHexColor(0xFFFFFF);
-                } else {
-                    ofSetHexColor(0xFFFF00);
-                }
-                ofTranslate(controlX[i], controlY[i]);
-                controlImage[i].draw(0, 0, controlW, controlH);
-                ofPopMatrix();
+    for (int i=0;i < nControls; i++) {
+        if (controlState[i] > 0) {
+            ofPushMatrix();
+            if (controlState[i] == 1) {
+                ofSetHexColor(0xFFFFFF);
+            } else {
+                ofSetHexColor(0xFFFF00);
             }
+            ofTranslate(controlX[i], controlY[i]);
+            controlImage[i].draw(0, 0, controlW, controlH);
+            ofPopMatrix();
+        }
     }
     
     ofSetRectMode(OF_RECTMODE_CENTER);
@@ -226,6 +318,22 @@ void ofApp::draw(){
     }
     for (int i=0; i<lightning.size(); i++) {
         lightning[i].get()->draw();
+    }
+    if (controlState[SHOW_JOINTS_CONTROL] == 2) {
+        for (int i=0; i<joints.size(); i++) {
+          ofSetColor( ofColor::fromHex(0xff0000) );
+          joints[i]->joint->draw();
+        }
+    }
+    
+    if (showColorWheel) {
+        ofSetHexColor(0xFFFFFF);
+        ofPushMatrix();
+        
+        ofTranslate(screenW/2, screenH/3);
+        ofRotate(globalTick % 1080);
+        colorwheel.draw(0, 0, screenW-20, screenW-20);
+        ofPopMatrix();
     }
     
     vagRounded.drawString(ofToString(ofGetFrameRate()), 10,20);
@@ -263,11 +371,21 @@ void ofApp::touchUp(ofTouchEventArgs & touch){
         if (startTouchId[i] == touch.id) {
             if (controlState[i]>1) controlState[i] = 1;
             startTouchId[i] = 0;
-            if (i == EARTHQUAKE_CONTROL) {
+            /*if (i == EARTHQUAKE_CONTROL) {
                 earthquakeApplied = false;
-            }
+            }*/
             if (i == TELEPORT_CONTROL) {
                 teleported = false;
+            }
+            if (i == SHOW_JOINTS_CONTROL) {
+                jointsShown = false;
+            }
+            if (i == PAUSE_MORE_CONTROL) {
+                paused = false;
+            }
+            if (i == COLORWHEEL_CONTROL) {
+                paused = false;
+                showColorWheel = false;
             }
         }
     }
@@ -318,11 +436,15 @@ void ofApp::contactEnd(ofxBox2dContactArgs &e) {
             b2Body *b2 = e.b->GetBody();
             BoxData *bd2 = (BoxData *)b2->GetUserData();
             if (bd2 !=NULL) {
-                // Add to list of connections to make in the update
-                connections.push_back(shared_ptr<FluxlyConnection>(new FluxlyConnection));
-                FluxlyConnection * c = connections.back().get();
-                c->id1 = bd1->boxId;
-                c->id2 = bd2->boxId;
+                if ((bd1->boxId != teleportingId) &&  (bd1->boxId != teleportingId)) {
+                  // Add to list of connections to make in the update
+                  connections.push_back(shared_ptr<FluxlyConnection>(new FluxlyConnection));
+                  FluxlyConnection * c = connections.back().get();
+                  c->id1 = bd1->boxId;
+                  c->id2 = bd2->boxId;
+                } else {
+                    ofLog(OF_LOG_VERBOSE, "Ignoring %d", teleportingId);
+                }
             }
         }
     }
@@ -345,7 +467,7 @@ void ofApp::addCloud() {
     clouds.push_back(shared_ptr<FluxlyCloud>(new FluxlyCloud));
     FluxlyCloud * c = clouds.back().get();
     c->setPhysics(1, 0, .3);
-    c->setup(box2d[0].getWorld(), ofRandom(20, 300), ofRandom(10, 100), 32, 32);
+    c->setup(box2d.getWorld(), ofRandom(20, 300), ofRandom(10, 100), 32, 32);
 }
 
 void ofApp::addLightning() {
@@ -355,7 +477,7 @@ void ofApp::addLightning() {
     l->setPhysics(5, 0, .3);
     l->setRotationFriction(.99);
     l->setDamping(.99, .99);
-    l->setup(box2d[0].getWorld(), ofRandom(20, 300), ofRandom(10, 100), 62, 649);
+    l->setup(box2d.getWorld(), ofRandom(20, 300), ofRandom(10, 100), 62, 649);
     lightningAdded = true;
 }
 
@@ -366,15 +488,92 @@ void ofApp::removeLightning() {
 
 bool ofApp::notConnectedYet(int n1, int n2) {
     bool retVal = true;
-    for (int i=0; i < boxen[n1]->nJoints; i++) {
-        if (boxen[n1]->connections[i] == n2) retVal =  false;
+   /* for (int i=0; i < boxen[n1]->nJoints; i++) {
+        
+        if (boxen[n1]->connections[i] == n2) {
+           // ofLog(OF_LOG_VERBOSE, "Checking box %d connection list (length %d): %d == %d: Already connected",n1, boxen[n1]->nJoints, boxen[n1]->connections[i], n2);
+            retVal =  false;
+        } else {
+            //ofLog(OF_LOG_VERBOSE, "Checking box %d connection list (length %d): %d == %d: Not yet connected",n1, boxen[n1]->nJoints, boxen[n1]->connections[i], n2);
+        }
+    }*/
+    int myId1;
+    int myId2;
+    for (int i=0; i < joints.size(); i++) {
+        myId1 = joints[i]->id1;
+        myId2 = joints[i]->id2;
+        if (((n1 == myId1) && (n2 == myId2)) || ((n2 == myId1) && (n1 == myId2))) {
+          //  ofLog(OF_LOG_VERBOSE, "Checking box %d connection list (length %d): %d == %d, %d == %d: Already connected",
+                //  n1, boxen[n1]->nJoints, n1, myId1, n1, myId2);
+            retVal = false;
+        } else {
+           // ofLog(OF_LOG_VERBOSE, "Checking box %d connection list (length %d): %d == %d, %d == %d: Not Yet connected",
+            //      n1, boxen[n1]->nJoints, n1, myId1, n1, myId2);
+        }
     }
     return retVal;
 }
 
 bool ofApp::complementaryColors(int n1, int n2) {
     bool retVal = false;
-    if ((abs(boxen[n1]->type - boxen[n2]->type) == 1) || ((n1 == 0) || (n2 == 0))) retVal = true;
+    if ((abs(boxen[n1]->type - boxen[n2]->type) == 1) || ((n1 == 0) || (n2 == 0))) {
+       // ofLog(OF_LOG_VERBOSE, "    CORRECT COLOR");
+        retVal = true;
+    } else {
+       // ofLog(OF_LOG_VERBOSE, "    WRONG COLOR");
+    }
     return retVal;
 }
+
+
+//--------------------------------------------------------------
+void ofApp::audioReceived(float * input, int bufferSize, int nChannels) {
+    pd.audioIn(input, bufferSize, nChannels);
+}
+
+//--------------------------------------------------------------
+void ofApp::audioRequested(float * output, int bufferSize, int nChannels) {
+    pd.audioOut(output, bufferSize, nChannels);
+}
+
+//--------------------------------------------------------------
+// set the samplerate the Apple approved way since newer devices
+// like the iPhone 6S only allow certain sample rates,
+// the following code may not be needed once this functionality is
+// incorporated into the ofxiOSSoundStream
+// thanks to Seth aka cerupcat
+float ofApp::setAVSessionSampleRate(float preferredSampleRate) {
+    
+    NSError *audioSessionError = nil;
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    
+    // disable active
+    [session setActive:NO error:&audioSessionError];
+    if (audioSessionError) {
+        NSLog(@"Error %ld, %@", (long)audioSessionError.code, audioSessionError.localizedDescription);
+    }
+    
+    // set category
+    [session setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionAllowBluetooth|AVAudioSessionCategoryOptionMixWithOthers|AVAudioSessionCategoryOptionDefaultToSpeaker error:&audioSessionError];
+    if(audioSessionError) {
+        NSLog(@"Error %ld, %@", (long)audioSessionError.code, audioSessionError.localizedDescription);
+    }
+    
+    // try to set the preferred sample rate
+    [session setPreferredSampleRate:preferredSampleRate error:&audioSessionError];
+    if(audioSessionError) {
+        NSLog(@"Error %ld, %@", (long)audioSessionError.code, audioSessionError.localizedDescription);
+    }
+    
+    // *** Activate the audio session before asking for the "current" values ***
+    [session setActive:YES error:&audioSessionError];
+    if (audioSessionError) {
+        NSLog(@"Error %ld, %@", (long)audioSessionError.code, audioSessionError.localizedDescription);
+    }
+    ofLogNotice() << "AVSession samplerate: " << session.sampleRate << ", I/O buffer duration: " << session.IOBufferDuration;
+    
+    // our actual samplerate, might be differnt aka 48k on iPhone 6S
+    return session.sampleRate;
+}
+
 
