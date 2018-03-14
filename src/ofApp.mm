@@ -57,7 +57,7 @@ void ofApp::setup(){
     
     // audio processing on
     pd.start();
-    pd.openPatch("fluxlySoundtrack.pd");
+    pd.openPatch("YakShaveriOS2.pd");
     
     ofSeedRandom();
 
@@ -72,45 +72,100 @@ void ofApp::setup(){
     
     //background.load("background" + std::to_string((int)ofRandom(1, 5)) + ".png");
     background.load("background2.png");
-    foreground.load("foreground2.png");
     colorwheel.load("colorWheel.png");
     
     // the world bounds
     bounds.set(0, 0, worldW, worldH);
     box2d.init();
     box2d.setFPS(60);
-    box2d.setGravity(gravityX, gravityY);
+    box2d.setGravity(0, 0);
     box2d.createBounds(bounds);
     box2d.enableEvents();
     ofAddListener(box2d.contactStartEvents, this, &ofApp::contactStart);
     ofAddListener(box2d.contactEndEvents, this, &ofApp::contactEnd);
+
+    box2d.registerGrabbing();
     
+    vagRounded.load("vag.ttf", 18);
+    
+    newGame();
+
+}
+
+void ofApp::newGame() {
+    int masterTempo =ofRandom(50, 2000)/200;
+    
+    //pd.sendFloat("masterTempoIn", masterTempo);
+    // add some static bodies
+ /*   int n= ofRandom(0, 5);
+    for (int i=0; i < n; i++) {
+        int w = ofRandom(20, 100);
+        int x = ofRandom(10, worldW/2-w/2);
+        int y = ofRandom(10, worldH/2-w/2);
+       
+        for (int j=0; j < 2; j++) {
+            for (int k=0; k<2; k++) {
+              ground.push_back(shared_ptr<FluxlyGround>(new FluxlyGround));
+              FluxlyGround * g = ground.back().get();
+              g->setPhysics(0, 0.5, 0);
+              g->w = w;
+              g->setup(box2d.getWorld(),worldW/2-(x-(worldW/2)*j), worldH/2-(y-(worldH/2)*k), g->w/2);
+            }
+        }
+    }
+    */
+    int nBoxes;
+    int nCircles;
+        nCircles = 5;
+        nBoxes = 0;
     // add some boxes to world
-    for (int i=0; i < ofRandom(10, 50); i++) {
+    for (int i=0; i < nBoxes; i++) {
     // for (int i=0; i < 8; i++) {
         boxen.push_back(shared_ptr<FluxlyBox>(new FluxlyBox));
         FluxlyBox * b = boxen.back().get();
-        if (i<7) {
+        if (i<7) {  // guarantee one of each color
             b->type = i;
         } else {
             b->type = ofRandom(1,6);
         }
-        float w = ofRandom(5,10)*2;  // should be multiple of 2 or power of 2?
+        float w = ofRandom(50 ,75);
         //float w = 16.0;
-        b->setPhysics(1, 0.5, 1);
+        b->setPhysics(1, .5, 1);    // density, bounce, friction
         b->setup(box2d.getWorld(), ofRandom(10, worldW-10), ofRandom(10, worldH-10), w, w);
         b->id = i;
         b->w = w;
+        b->instrument = (i % 5)+2;
         BoxData * bd = new BoxData();
         bd->boxId = i;
+        b->setRotation(ofRandom(0,360));
         b->body->SetUserData(bd);
         b->eyePeriod = ofRandom(200, 500);
         b->init();
     }
-    
-   // box2d[0].registerGrabbing();
-    
-    vagRounded.load("vag.ttf", 18);
+    // add some circles to world
+    for (int i=0; i < nCircles; i++) {
+        // for (int i=0; i < 8; i++) {
+        circles.push_back(shared_ptr<FluxlyCircle>(new FluxlyCircle));
+        FluxlyCircle * c = circles.back().get();
+        if (i<7) {  // guarantee one of each color
+            c->type = i;
+        } else {
+            c->type = ofRandom(1,6);
+        }
+        float w = ofRandom(50 ,100);  // should be multiple of 2 or power of 2?
+        //float w = 16.0;
+        c->setPhysics(1, .5, 1);    // density, bounce, friction
+        c->setup(box2d.getWorld(), ofRandom(10, worldW-10), ofRandom(10, worldH-10), w/2);
+        c->id = i;
+        c->w = w;
+        c->instrument = (i % 5)+2;
+        BoxData * bd = new BoxData();
+        bd->boxId = i;
+        c->setRotation(ofRandom(0,360));
+        c->body->SetUserData(bd);
+        c->eyePeriod = ofRandom(200, 500);
+        c->init();
+    }
 }
 
 static bool shouldRemoveLightning(shared_ptr<ofxBox2dBaseShape>shape) {
@@ -146,17 +201,41 @@ void ofApp::update() {
     }
     
     if (!paused) {
-        if (!teleported) box2d.update();
+        box2d.update();
         
         // Check for tick events
         globalTick++;
+        /*
         for (int i=0; i<boxen.size(); i++) {
-            if ((globalTick % boxen[i]->eyePeriod) == 0) {
+            if ((globalTick % boxen[i]->eyePeriod) == 0)  {
                 if (boxen[i]->eyeState == 1) {
                     boxen[i]->eyeState = 0;
                 } else {
                     boxen[i]->eyeState = 1;
                 }
+            }
+        }
+        for (int i=0; i<circles.size(); i++) {
+            if ((globalTick % circles[i]->eyePeriod) == 0) {
+                if (circles[i]->eyeState == 1)  {
+                    circles[i]->eyeState = 0;
+                } else {
+                    circles[i]->eyeState = 1;
+                }
+            }
+        }*/
+        for (int i=0; i<boxen.size(); i++) {
+            if (boxen[i]->spinning) {
+                boxen[i]->eyeState = 1;
+            } else {
+                boxen[i]->eyeState = 0;
+            }
+        }
+        for (int i=0; i<circles.size(); i++) {
+            if (circles[i]->spinning) {
+                circles[i]->eyeState = 1;
+            } else {
+                circles[i]->eyeState = 0;
             }
         }
         if (((globalTick % lightningPeriod) == 0) && (lightning.size() > 0)) {
@@ -190,6 +269,7 @@ void ofApp::update() {
                 gravityX = origGravityX;
             }
         }
+        
         for (int i=0; i<clouds.size(); i++) {
             clouds[i].get()->setRotation(0);
             clouds[i].get()->setRotationFriction(1);
@@ -197,28 +277,56 @@ void ofApp::update() {
             clouds[i].get()->pushUp();
         }
         
-        if (controlState[PAUSE_MORE_CONTROL] == 2 ) {
-            paused = true;
+        for (int i=0; i<boxen.size(); i++) {
+            boxen[i].get()->setRotationFriction(1);
+            boxen[i].get()->setDamping(0, 0);
+            boxen[i].get()->checkToSendNote();
+            boxen[i].get()->checkToSendTempo();
+            
+            if (boxen[i].get()->sendTempo) {
+                ofLog(OF_LOG_VERBOSE, "Changed masterTempo %d: %f", i, boxen[i]->tempo);
+                pd.sendFloat("masterTempoIn", boxen[i]->tempo/4);
+                boxen[i].get()->sendTempo = false;
+            }
+           /*
+            if (boxen[i].get()->sendOn) {
+                pd.sendFloat("toggle"+to_string(boxen[i].get()->instrument), 1.0);
+                boxen[i].get()->sendOn = false;
+            }
+            if (boxen[i].get()->sendOff) {
+                pd.sendFloat("toggle"+to_string(boxen[i].get()->instrument), 0.0);
+                boxen[i].get()->sendOff = false;
+            }
+            pd.readArray("scope"+to_string(i % 6), boxen[i].get()->scopeArray);
+            */
         }
         
-        if (controlState[CLOUD_CONTROL] == 2 ) {
-            addCloud();
+        for (int i=0; i<circles.size(); i++) {
+            circles[i].get()->setRotationFriction(1);
+            circles[i].get()->setDamping(0, 0);
+            circles[i].get()->checkToSendNote();
+            circles[i].get()->checkToSendTempo();
+            
+            if (circles[i].get()->sendTempo) {
+                ofLog(OF_LOG_VERBOSE, "Changed tempo %d: %f", i, circles[i]->tempo);
+                pd.sendFloat("tempo"+to_string(circles[i].get()->instrument), circles[i]->tempo);
+                circles[i].get()->sendTempo = false;
+            }
+            if (circles[i].get()->sendOn) {
+                pd.sendFloat("toggle"+to_string(circles[i].get()->instrument), 1.0);
+                circles[i].get()->sendOn = false;
+            }
+            if (circles[i].get()->sendOff) {
+                pd.sendFloat("toggle"+to_string(circles[i].get()->instrument), 0.0);
+                circles[i].get()->sendOff = false;
+            }
+            pd.readArray("scope"+to_string(circles[i].get()->instrument), circles[i].get()->scopeArray);
         }
-        if ((controlState[LIGHTNING_CONTROL] == 2 ) && !lightningAdded) {
-            addLightning();
-        }
         
-        /*if ((controlState[EARTHQUAKE_CONTROL] == 2) && !earthquakeApplied) {
-         for (int i=0; i<boxen.size(); i++) {
-         ofLog(OF_LOG_VERBOSE, "shake %d", i);
-         boxen[i].get()->shake();
-         earthquakeApplied = true;
-         }
-         }*/
+       //box2d.setGravity(gravityX, gravityY);
         
-        box2d.setGravity(gravityX, gravityY);
-        
-        if (connections.size()>0) {
+       // if (connections.size() > 0) {
+        if (false) {
             for (int i=0; i<connections.size(); i++) {
                 //Go through list of connections and add joints
                 ofLog(OF_LOG_VERBOSE, "List size: %d  id1: %d  id2: %d", connections.size(), connections[i]->id1, connections[i]->id2);
@@ -227,7 +335,8 @@ void ofApp::update() {
                 tempId2 = connections[i]->id2;
                 
                 if ((boxen[tempId1]->nJoints < maxJoints) && (boxen[tempId2]->nJoints < maxJoints)
-                    && notConnectedYet(tempId1, tempId2) && complementaryColors(tempId1, tempId2)){
+                    && notConnectedYet(tempId1, tempId2) && complementaryColors(tempId1, tempId2)) {
+                    
                     ofLog(OF_LOG_VERBOSE, "CONNECT: %d -> %d", tempId1, tempId2);
                     /*shared_ptr<ofxBox2dJoint> joint = shared_ptr<ofxBox2dJoint>(new ofxBox2dJoint);
                      joint.get()->setup(box2d[0].getWorld(), boxen[tempId1].get()->body, boxen[tempId2].get()->body);
@@ -243,12 +352,8 @@ void ofApp::update() {
                     jc.get()->joint = j;
                     joints.push_back(jc);
                     
-                    //boxen[tempId1]->connections[boxen[tempId1]->nJoints] = tempId2;
-                    //boxen[tempId2]->connections[boxen[tempId2]->nJoints] = tempId1;
                     boxen[tempId1]->nJoints++;
                     boxen[tempId2]->nJoints++;
-                    // if (boxen[tempId1]->nJoints == maxJoints) { boxen[tempId1]->color = ofColor::fromHex(0xcccccc); }
-                    // if (boxen[tempId2]->nJoints == maxJoints) { boxen[tempId2]->color = ofColor::fromHex(0xcccccc); }
                 }
             }
         }
@@ -257,31 +362,6 @@ void ofApp::update() {
         ofRemove(connections, shouldRemoveConnection);
         //ofLog(OF_LOG_VERBOSE, "Connections after remove: %d", connections.size());
         
-        
-        if ((controlState[TELEPORT_CONTROL] == 2 ) && !teleported) {
-            int r = ofRandom(0, boxen.size());
-            //ofLog(OF_LOG_VERBOSE, "Number of joints: %d", joints.size());
-            for (int i=0; i<joints.size(); i++) {
-                ofSetColor( ofColor::fromHex(0xff0000) );
-                int myId1 = joints[i]->id1;
-                int myId2 = joints[i]->id2;
-                if ((myId1 == r) ||
-                    (myId2 == r)) {
-                    boxen[myId1]->nJoints--;
-                    boxen[myId2]->nJoints--;
-                    ofLog(OF_LOG_VERBOSE, "r: %d id1: %d id2: %d", r, joints[i]->id1, joints[i]->id2);
-                    ofLog(OF_LOG_VERBOSE, "Removed joint count: %d",boxen[r]->nJoints);
-                    joints[i]->joint->destroy();    // this calls box2d.getWorld()->DestroyJoint(joints[i]->joint->joint);
-                    joints.erase( joints.begin() + i );
-                }
-            }
-            // box2d.getWorld()->DestroyBody(boxen[r].get()->body);
-            // boxen[r]->setup(box2d.getWorld(), ofRandom(20, worldW-20), ofRandom(10, worldH-100), boxen[r]->w, boxen[r]->w);
-             boxen[r]->teleport();
-            teleportingId = r;
-            //box2d.getWorld()->CreateBody(boxen[r].get()->def);
-            teleported = true;
-        }
        
     }
 }
@@ -293,7 +373,7 @@ void ofApp::draw() {
     ofSetRectMode(OF_RECTMODE_CORNER);
     background.draw(0, 0, worldW, worldH);
     ofSetHexColor(0xFFFFFF);
-    
+    /*
     for (int i=0;i < nControls; i++) {
         if (controlState[i] > 0) {
             ofPushMatrix();
@@ -306,11 +386,33 @@ void ofApp::draw() {
             controlImage[i].draw(0, 0, controlW, controlH);
             ofPopMatrix();
         }
-    }
+    }*/
     
     ofSetRectMode(OF_RECTMODE_CENTER);
+
+    for (int i=0; i<ground.size(); i++) {
+        ground[i].get()->draw();
+    }
+    
+    /*for (int i=0; i<boxen.size(); i++) {
+        boxen[i].get()->drawAnimation();
+        
+    }*/
+    
+    for (int i=0; i<circles.size(); i++) {
+        circles[i].get()->drawAnimation();
+    }
+    /*for (int i=0; i<boxen.size(); i++) {
+        boxen[i].get()->drawSoundWave();
+    }*/
+    for (int i=0; i<circles.size(); i++) {
+        circles[i].get()->drawSoundWave();
+    }
     for (int i=0; i<boxen.size(); i++) {
         boxen[i].get()->draw();
+    }
+    for (int i=0; i<circles.size(); i++) {
+        circles[i].get()->draw();
     }
     
     for (int i=0; i<clouds.size(); i++) {
@@ -336,7 +438,7 @@ void ofApp::draw() {
         ofPopMatrix();
     }
     
-    vagRounded.drawString(ofToString(ofGetFrameRate()), 10,20);
+    //vagRounded.drawString(ofToString(ofGetFrameRate()), 10,20);
 }
 
 //--------------------------------------------------------------
@@ -347,33 +449,33 @@ void ofApp::exit(){
 //--------------------------------------------------------------
 void ofApp::touchDown(ofTouchEventArgs & touch){
     // add code to attach touch to button
-    for (int i=0; i<nControls; i++) {
+   /* for (int i=0; i<nControls; i++) {
         if (inBounds(i, touch.x, touch.y)) {
             if (controlState[i]>0) controlState[i] = 2;
             startTouchId[i] = touch.id;
         }
-    }
+    }*/
+    
 }
 
 //--------------------------------------------------------------
 void ofApp::touchMoved(ofTouchEventArgs & touch){
-    for (int i=0; i<nControls; i++) {
+  /*  for (int i=0; i<nControls; i++) {
         if (!inBounds(i, touch.x, touch.y) && (startTouchId[i] == touch.id)) {
             if (controlState[i]>0) controlState[i] = 1;
             startTouchId[i] = 0;
         }
     }
+   */
 }
 
 //--------------------------------------------------------------
 void ofApp::touchUp(ofTouchEventArgs & touch){
-    for (int i=0; i<nControls; i++) {
+   /* for (int i=0; i<nControls; i++) {
         if (startTouchId[i] == touch.id) {
             if (controlState[i]>1) controlState[i] = 1;
             startTouchId[i] = 0;
-            /*if (i == EARTHQUAKE_CONTROL) {
-                earthquakeApplied = false;
-            }*/
+    
             if (i == TELEPORT_CONTROL) {
                 teleported = false;
             }
@@ -388,7 +490,7 @@ void ofApp::touchUp(ofTouchEventArgs & touch){
                 showColorWheel = false;
             }
         }
-    }
+    }*/
 }
 
 //--------------------------------------------------------------

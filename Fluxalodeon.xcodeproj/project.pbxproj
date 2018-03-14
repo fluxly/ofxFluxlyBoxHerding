@@ -108,6 +108,18 @@
 		981EA7C2357295AE8501F4C6 /* b2PolygonShape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC3FCAE32B28B52708484DC5 /* b2PolygonShape.cpp */; };
 		9B6405AE8F948A9F1D414004 /* g_guiconnect.c in Sources */ = {isa = PBXBuildFile; fileRef = 1432C49539CC5A34A4FB81FF /* g_guiconnect.c */; };
 		9C908654F2EC96C390AC467C /* ringbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 388CEC9FA2E2E77F5EC26BF9 /* ringbuffer.c */; };
+		9D00416C20476157001DFF83 /* mesh6.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D00416620476156001DFF83 /* mesh6.png */; };
+		9D00416D20476157001DFF83 /* mesh4.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D00416720476157001DFF83 /* mesh4.png */; };
+		9D00416E20476157001DFF83 /* mesh1.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D00416820476157001DFF83 /* mesh1.png */; };
+		9D00416F20476157001DFF83 /* mesh2.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D00416920476157001DFF83 /* mesh2.png */; };
+		9D00417020476157001DFF83 /* mesh3.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D00416A20476157001DFF83 /* mesh3.png */; };
+		9D00417120476157001DFF83 /* mesh5.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D00416B20476157001DFF83 /* mesh5.png */; };
+		9D0041742048A08B001DFF83 /* YakShaveriOS.pd in Resources */ = {isa = PBXBuildFile; fileRef = 9D0041732048A08B001DFF83 /* YakShaveriOS.pd */; };
+		9D0041772048A248001DFF83 /* yak-channel.pd in Resources */ = {isa = PBXBuildFile; fileRef = 9D0041762048A248001DFF83 /* yak-channel.pd */; };
+		9D00417A2048A3F5001DFF83 /* accordion1.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9D0041782048A3F5001DFF83 /* accordion1.wav */; };
+		9D00417B2048A3F5001DFF83 /* aisha.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9D0041792048A3F5001DFF83 /* aisha.wav */; };
+		9D00417D2048A489001DFF83 /* sine.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9D00417C2048A489001DFF83 /* sine.wav */; };
+		9D0043162058B924001DFF83 /* YakShaveriOS2.pd in Resources */ = {isa = PBXBuildFile; fileRef = 9D0043152058B924001DFF83 /* YakShaveriOS2.pd */; };
 		9D0AA091FE805EB564CD05D0 /* b2RopeJoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AF1A6A7D5CD5468B3F846A62 /* b2RopeJoint.cpp */; };
 		9D2560052026B94B003989FB /* lessGravity.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D255FD42026B943003989FB /* lessGravity.png */; };
 		9D2560062026B94B003989FB /* startup2.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 9D255FD52026B943003989FB /* startup2.mp3 */; };
@@ -411,6 +423,18 @@
 		9AFC4007C93116900770D2AD /* x_vexp_fun.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 30; name = x_vexp_fun.c; path = "../../../addons/ofxPd/libs/libpd/pure-data/src/x_vexp_fun.c"; sourceTree = SOURCE_ROOT; };
 		9B868B25E5784F27CBC75D45 /* b2Draw.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 30; name = b2Draw.cpp; path = ../../../addons/ofxBox2d/libs/Box2D/Common/b2Draw.cpp; sourceTree = SOURCE_ROOT; };
 		9C69DFEE749ABBCA5CBAB764 /* x_misc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 30; name = x_misc.c; path = "../../../addons/ofxPd/libs/libpd/pure-data/src/x_misc.c"; sourceTree = SOURCE_ROOT; };
+		9D00416620476156001DFF83 /* mesh6.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mesh6.png; sourceTree = "<group>"; };
+		9D00416720476157001DFF83 /* mesh4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mesh4.png; sourceTree = "<group>"; };
+		9D00416820476157001DFF83 /* mesh1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mesh1.png; sourceTree = "<group>"; };
+		9D00416920476157001DFF83 /* mesh2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mesh2.png; sourceTree = "<group>"; };
+		9D00416A20476157001DFF83 /* mesh3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mesh3.png; sourceTree = "<group>"; };
+		9D00416B20476157001DFF83 /* mesh5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mesh5.png; sourceTree = "<group>"; };
+		9D0041732048A08B001DFF83 /* YakShaveriOS.pd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = YakShaveriOS.pd; sourceTree = "<group>"; };
+		9D0041762048A248001DFF83 /* yak-channel.pd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "yak-channel.pd"; sourceTree = "<group>"; };
+		9D0041782048A3F5001DFF83 /* accordion1.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = accordion1.wav; sourceTree = "<group>"; };
+		9D0041792048A3F5001DFF83 /* aisha.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = aisha.wav; sourceTree = "<group>"; };
+		9D00417C2048A489001DFF83 /* sine.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sine.wav; sourceTree = "<group>"; };
+		9D0043152058B924001DFF83 /* YakShaveriOS2.pd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = YakShaveriOS2.pd; sourceTree = "<group>"; };
 		9D255FC92026B907003989FB /* Default-568h@2x~iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x~iphone.png"; sourceTree = "<group>"; };
 		9D255FCA2026B907003989FB /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
 		9D255FCB2026B907003989FB /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
@@ -971,6 +995,16 @@
 		9D255FC82026B907003989FB /* data */ = {
 			isa = PBXGroup;
 			children = (
+				9D0043152058B924001DFF83 /* YakShaveriOS2.pd */,
+				9D00417C2048A489001DFF83 /* sine.wav */,
+				9D0041782048A3F5001DFF83 /* accordion1.wav */,
+				9D0041792048A3F5001DFF83 /* aisha.wav */,
+				9D00416820476157001DFF83 /* mesh1.png */,
+				9D00416920476157001DFF83 /* mesh2.png */,
+				9D00416A20476157001DFF83 /* mesh3.png */,
+				9D00416720476157001DFF83 /* mesh4.png */,
+				9D00416B20476157001DFF83 /* mesh5.png */,
+				9D00416620476156001DFF83 /* mesh6.png */,
 				9D25605A2034F63D003989FB /* colorWheelControl.png */,
 				9D2560582034F4FA003989FB /* colorWheel.png */,
 				9D256056202F8CDF003989FB /* grayOverlay.png */,
@@ -1321,6 +1355,8 @@
 		E4D8936A11527B74007E1F53 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9D0041762048A248001DFF83 /* yak-channel.pd */,
+				9D0041732048A08B001DFF83 /* YakShaveriOS.pd */,
 				9D25605E203654EA003989FB /* fluxlySoundtrack.pd */,
 				9D2560362026B976003989FB /* FluxlyClasses.h */,
 				9D32D60C1FA1335A00C87082 /* fluxly1.json */,
@@ -1387,7 +1423,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Fluxly" */;
+			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Fluxalodeon" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
@@ -1428,6 +1464,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9D2560182026B94B003989FB /* Land_down.png in Resources */,
+				9D00417D2048A489001DFF83 /* sine.wav in Resources */,
 				9D2560162026B94B003989FB /* whoosh.mp3 in Resources */,
 				9D2560302026B94B003989FB /* Icon.png in Resources */,
 				9D25601F2026B94B003989FB /* block.png in Resources */,
@@ -1437,6 +1474,7 @@
 				9D256040202C44E9003989FB /* background3.png in Resources */,
 				9D25602A2026B94B003989FB /* Icon@2x.png in Resources */,
 				9D25600C2026B94B003989FB /* new_stars.png in Resources */,
+				9D00416D20476157001DFF83 /* mesh4.png in Resources */,
 				678E130817951530005B6D19 /* Icon@2x.png in Resources */,
 				9D256041202C44E9003989FB /* background4.png in Resources */,
 				9D2560222026B94B003989FB /* up.png in Resources */,
@@ -1446,12 +1484,16 @@
 				9D25602D2026B94B003989FB /* background.mp3 in Resources */,
 				9D2560082026B94B003989FB /* land.mp3 in Resources */,
 				9D2560142026B94B003989FB /* fluxa.png in Resources */,
+				9D00417020476157001DFF83 /* mesh3.png in Resources */,
 				9D32D60D1FA1335A00C87082 /* fluxly1.json in Resources */,
 				9D2560072026B94B003989FB /* bubbles.png in Resources */,
 				678E130A17951536005B6D19 /* Icon.png in Resources */,
 				9D2560272026B94B003989FB /* startup1.mp3 in Resources */,
+				9D00416F20476157001DFF83 /* mesh2.png in Resources */,
 				9D2560342026B94B003989FB /* pauseMore.png in Resources */,
 				9D25603A202C0824003989FB /* eyesOpen.png in Resources */,
+				9D0043162058B924001DFF83 /* YakShaveriOS2.pd in Resources */,
+				9D0041742048A08B001DFF83 /* YakShaveriOS.pd in Resources */,
 				9D25600B2026B94B003989FB /* butterfly.png in Resources */,
 				9D2560242026B94B003989FB /* thunder.mp3 in Resources */,
 				9D25601D2026B94B003989FB /* new_stars copy.png in Resources */,
@@ -1460,6 +1502,7 @@
 				678E130C1795153C005B6D19 /* Default.png in Resources */,
 				9D2560172026B94B003989FB /* fluxa1.png in Resources */,
 				9D2560282026B94B003989FB /* down.png in Resources */,
+				9D00416E20476157001DFF83 /* mesh1.png in Resources */,
 				9D2560262026B94B003989FB /* Jump_Left.png in Resources */,
 				9D2560112026B94B003989FB /* fluxum1.png in Resources */,
 				9D25600F2026B94B003989FB /* windFromEast.png in Resources */,
@@ -1485,17 +1528,22 @@
 				9D256054202F5C6D003989FB /* foreground1.png in Resources */,
 				9D2560292026B94B003989FB /* moreGravity.png in Resources */,
 				9D256038202C0802003989FB /* eyesClosed.png in Resources */,
+				9D0041772048A248001DFF83 /* yak-channel.pd in Resources */,
 				9D25603F202C44E9003989FB /* background5.png in Resources */,
 				9D25602E2026B94B003989FB /* fluxum1.svg in Resources */,
 				9D2560592034F4FB003989FB /* colorWheel.png in Resources */,
 				9D256052202F5C6D003989FB /* foreground2.png in Resources */,
 				9D25602F2026B94B003989FB /* cloud.png in Resources */,
+				9D00416C20476157001DFF83 /* mesh6.png in Resources */,
 				9D2560212026B94B003989FB /* swirl.png in Resources */,
+				9D00417120476157001DFF83 /* mesh5.png in Resources */,
 				9D256046202CCA8C003989FB /* lightningControl.png in Resources */,
 				9D25605B2034F63D003989FB /* colorWheelControl.png in Resources */,
+				9D00417B2048A3F5001DFF83 /* aisha.wav in Resources */,
 				9D2560062026B94B003989FB /* startup2.mp3 in Resources */,
 				9D25605F203654EA003989FB /* fluxlySoundtrack.pd in Resources */,
 				9D256045202CCA8C003989FB /* cloudControl.png in Resources */,
+				9D00417A2048A3F5001DFF83 /* accordion1.wav in Resources */,
 				9D25602B2026B94B003989FB /* teleport.png in Resources */,
 				9D25602C2026B94B003989FB /* background.png in Resources */,
 			);
@@ -1701,9 +1749,10 @@
 				GCC_PREFIX_HEADER = ofxiOS_Prefix.pch;
 				"GCC_WARN_64_TO_32_BIT_CONVERSION[arch=*64]" = NO;
 				INFOPLIST_FILE = "ofxiOS-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = "${TARGET_NAME}";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "$(ARCHS_STANDARD)";
 			};
 			name = Debug;
@@ -1716,9 +1765,10 @@
 				GCC_PREFIX_HEADER = ofxiOS_Prefix.pch;
 				"GCC_WARN_64_TO_32_BIT_CONVERSION[arch=*64]" = NO;
 				INFOPLIST_FILE = "ofxiOS-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = "${TARGET_NAME}";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "$(ARCHS_STANDARD)";
 			};
 			name = Release;
@@ -1918,7 +1968,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Fluxly" */ = {
+		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Fluxalodeon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4F08A954540054247B /* Debug */,

@@ -50,6 +50,8 @@ class ofApp : public ofxiOSApp, public PdReceiver, public PdMidiReceiver {
         void draw();
         void exit();
 	
+        void newGame();
+    
         void touchDown(ofTouchEventArgs & touch);
         void touchMoved(ofTouchEventArgs & touch);
         void touchUp(ofTouchEventArgs & touch);
@@ -104,21 +106,21 @@ class ofApp : public ofxiOSApp, public PdReceiver, public PdMidiReceiver {
     int touchMargin = 2;
     
     float gravityX = 0.0;
-    float gravityY = 10.0;
-    float gravityXMin = -10.0;  // was -20
-    float gravityXMax = 10.0;
-    float gravityYMin = -10.0;
-    float gravityYMax = 10.0;
+    float gravityY = 0.0;
+    float gravityXMin = -0;  // was -20
+    float gravityXMax = 0;
+    float gravityYMin = -0;
+    float gravityYMax = 0;
     float origGravityX = 0.0;
-    float origGravityY = 10.0;
+    float origGravityY = 0;
     
     ofTrueTypeFont vagRounded;
     string eventString;
     
     int worldX[2] = { 0, 0 };
     int worldY[2] = { 0, 384 };
-    int worldW = 318;
-    int worldH = 440;
+    int worldW = 320;
+    int worldH = 568;
     int screenW = 320;
     int screenH = 568;
     int globalTick = 0;
@@ -147,6 +149,8 @@ class ofApp : public ofxiOSApp, public PdReceiver, public PdMidiReceiver {
     ofxBox2d box2d;
     
     vector <shared_ptr<FluxlyBox> > boxen;
+    vector <shared_ptr<FluxlyCircle> > circles;
+    vector <shared_ptr<FluxlyGround> > ground;
     vector <shared_ptr<FluxlyCloud> > clouds;
     vector <shared_ptr<FluxlyLightning> > lightning;
     vector <shared_ptr<FluxlyJointConnection> > joints;
